@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Model Tracker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #0f0f0f;
+      color: #d4ffd4;
+      padding: 2rem;
+    }
+    h1 {
+      color: #9fff9f;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    textarea, input[type="text"], input[type="date"], input[type="number"], select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #444;
+      background-color: #1e1e1e;
+      color: #d4ffd4;
+      border-radius: 5px;
+      resize: none;
+      overflow: hidden;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #1db954;
+      color: black;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .entry {
+      background-color: #1a1a1a;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 5px;
+      border: 1px solid #333;
+    }
+    .entry p {
+      margin: 0.5rem 0;
+    }
+    .search {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🤖 ML Model Tracker</h1>
+
+  <form id="mlForm">
+    <label>Date</label>
+    <input type="date" name="date" required />
+
+    <label>Dataset Link</label>
+    <input type="text" name="datasetLink" required />
+
+    <label>Dataset Shape</label>
+    <input type="text" name="datasetShape" required />
+
+    <label>Model</label>
+    <input type="text" name="model" required />
+
+    <label>Hyperparameters</label>
+    <textarea name="hyperparams" required></textarea>
+
+    <label>Things I Struggled With</label>
+    <textarea name="struggles" required></textarea>
+
+    <label>Things I Learned</label>
+    <textarea name="learnings" required></textarea>
+
+    <label>Things I Want to Improve</label>
+    <textarea name="improvements" required></textarea>
+
+    <label>Things I Did Well</label>
+    <textarea name="successes" required></textarea>
+
+    <label>Overfitted?</label>
+    <select name="overfitted">
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+
+    <label>Training Time (seconds)</label>
+    <input type="number" name="trainingTime" required />
+
+    <label>Training Score</label>
+    <input type="number" step="any" name="trainScore" required />
+
+    <label>Validation Score</label>
+    <input type="number" step="any" name="valScore" required />
+
+    <label>Test Score</label>
+    <input type="number" step="any" name="testScore" required />
+
+    <button type="submit">Save Entry</button>
+  </form>
+
+  <div class="search">
+    <label>Search by Date or Model Name:</label>
+    <input type="text" id="search" placeholder="e.g., 2025-07-25 or RandomForest" />
+  </div>
+
+  <div id="entries"></div>
+
+  <script>
+    const form = document.getElementById("mlForm");
+    const entriesContainer = document.getElementById("entries");
+    const searchInput = document.getElementById("search");
+
+    let entries = JSON.parse(localStorage.getItem("mlModelTracker")) || [];
+
+    function saveEntries() {
+      localStorage.setItem("mlModelTracker", JSON.stringify(entries));
+    }
+
+    function renderEntries(filtered = entries) {
+      entriesContainer.innerHTML = "";
+      if (filtered.length === 0) {
+        entriesContainer.innerHTML = "<p>No models found.</p>";
+        return;
+      }
+      filtered.forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <p><strong>Date:</strong> ${entry.date}</p>
+          <p><strong>Dataset Link:</strong> <a href="${entry.datasetLink}" target="_blank">${entry.datasetLink}</a></p>
+          <p><strong>Dataset Shape:</strong> ${entry.datasetShape}</p>
+          <p><strong>Model:</strong> ${entry.model}</p>
+          <p><strong>Hyperparameters:</strong> ${entry.hyperparams}</p>
+          <p><strong>Struggles:</strong> ${entry.struggles}</p>
+          <p><strong>Learned:</strong> ${entry.learnings}</p>
+          <p><strong>Want to Improve:</strong> ${entry.improvements}</p>
+          <p><strong>Did Well:</strong> ${entry.successes}</p>
+          <p><strong>Overfitted:</strong> ${entry.overfitted}</p>
+          <p><strong>Training Time:</strong> ${entry.trainingTime} s</p>
+          <p><strong>Training Score:</strong> ${entry.trainScore}</p>
+          <p><strong>Validation Score:</strong> ${entry.valScore}</p>
+          <p><strong>Test Score:</strong> ${entry.testScore}</p>
+        `;
+        entriesContainer.appendChild(div);
+      });
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const newEntry = Object.fromEntries(formData.entries());
+      entries.push(newEntry);
+      saveEntries();
+      renderEntries();
+      form.reset();
+    });
+
+    searchInput.addEventListener("input", function () {
+      const query = this.value.toLowerCase();
+      const filtered = entries.filter(entry =>
+        entry.date.includes(query) ||
+        entry.model.toLowerCase().includes(query)
+      );
+      renderEntries(filtered);
+    });
+
+    document.querySelectorAll("textarea").forEach(textarea => {
+      textarea.setAttribute("rows", "1");
+      textarea.addEventListener("input", autoExpand);
+    });
+
+    function autoExpand(e) {
+      e.target.style.height = "auto";
+      e.target.style.height = (e.target.scrollHeight) + "px";
+    }
+
+    renderEntries();
+  </script>
+</body>
+</html>
